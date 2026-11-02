@@ -1,0 +1,27 @@
+<h3>Módulo de Recepción (Backend: PHP)</h3>
+
+<div style="background: #e9ecef; padding: 15px; margin-bottom: 20px;">
+  <h4>Registrar Nuevo Albergado</h4>
+  <input type="text" placeholder="Nombres" [(ngModel)]="nuevoAlbergado.nombres" style="margin-right: 10px;">
+  <input type="text" placeholder="Apellidos" [(ngModel)]="nuevoAlbergado.apellidos" style="margin-right: 10px;">
+  <select [(ngModel)]="nuevoAlbergado.tipo" style="margin-right: 10px;">
+    <option value="Paciente">Paciente</option>
+    <option value="Acompañante">Acompañante</option>
+  </select>
+  <button (click)="registrar()">Registrar Recepción</button>
+</div>
+
+<table border="1" cellpadding="10" style="border-collapse: collapse; width: 100%;">
+  <thead style="background-color: #f2f2f2;">
+    <tr><th>ID</th><th>Nombres</th><th>Apellidos</th><th>DNI</th><th>Tipo</th></tr>
+  </thead>
+  <tbody>
+    <tr *ngFor="let item of albergados">
+      <td>{{ item.id_albergado }}</td>
+      <td>{{ item.nombres }}</td>
+      <td>{{ item.apellidos }}</td>
+      <td>{{ item.dni }}</td>
+      <td>{{ item.tipo }}</td>
+    </tr>
+  </tbody>
+</table>

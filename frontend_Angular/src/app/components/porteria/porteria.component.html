@@ -1,0 +1,30 @@
+<h3>Módulo de Portería (Backend: Java)</h3>
+
+<div style="background: #e9ecef; padding: 15px; margin-bottom: 20px;">
+  <h4>Registrar Salida</h4>
+  <input type="number" placeholder="ID Albergado" [(ngModel)]="nuevaSalida.id_albergado" style="margin-right: 10px;">
+  <input type="text" placeholder="Motivo" [(ngModel)]="nuevaSalida.motivo_salida" style="margin-right: 10px;">
+  <input type="text" placeholder="Observación" [(ngModel)]="nuevaSalida.observaciones" style="margin-right: 10px;">
+  <button (click)="registrar()">Registrar Salida</button>
+</div>
+
+<table border="1" cellpadding="10" style="border-collapse: collapse; width: 100%;">
+  <thead style="background-color: #f2f2f2;">
+    <tr>
+      <th>ID Albergado</th>
+      <th>Fecha y Hora Salida</th>
+      <th>Fecha y Hora Retorno</th>
+      <th>Motivo</th>
+      <th>Observaciones</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr *ngFor="let item of accesos">
+      <td>{{ item.id_albergado }}</td>
+      <td>{{ item.fecha_hora_salida }}</td>
+      <td>{{ item.fecha_hora_retorno }}</td>
+      <td>{{ item.motivo_salida }}</td>
+      <td>{{ item.observaciones }}</td>
+    </tr>
+  </tbody>
+</table>

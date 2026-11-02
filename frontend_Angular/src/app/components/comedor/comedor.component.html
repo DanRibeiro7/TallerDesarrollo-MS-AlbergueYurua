@@ -1,0 +1,27 @@
+<h3>Módulo de Comedor (Backend: Node.js)</h3>
+
+<div style="background: #e9ecef; padding: 15px; margin-bottom: 20px;">
+  <h4>Registrar Ración</h4>
+  <input type="number" placeholder="ID Albergado" [(ngModel)]="nuevoConsumo.id_albergado" style="margin-right: 10px;">
+  <select [(ngModel)]="nuevoConsumo.tipo_comida" style="margin-right: 10px;">
+    <option value="Desayuno">Desayuno</option>
+    <option value="Almuerzo">Almuerzo</option>
+    <option value="Cena">Cena</option>
+  </select>
+  <button (click)="registrar()">Registrar Consumo</button>
+</div>
+
+<table border="1" cellpadding="10" style="border-collapse: collapse; width: 100%;">
+  <thead style="background-color: #f2f2f2;">
+    <tr><th>ID Consumo</th><th>ID Albergado</th><th>Fecha y Hora</th><th>Tipo de Comida</th><th>Estado</th></tr>
+  </thead>
+  <tbody>
+    <tr *ngFor="let item of consumos">
+      <td>{{ item.id_consumo }}</td>
+      <td>{{ item.id_albergado }}</td>
+      <td>{{ item.fecha_hora }}</td>
+      <td>{{ item.tipo_comida }}</td>
+      <td>{{ item.estado_entrega === 1 ? 'Entregado' : 'Pendiente' }}</td>
+    </tr>
+  </tbody>
+</table>
