@@ -2,7 +2,10 @@
 
   <h2 class="mb-4">Control de Portería</h2>
 
+  <!-- ====================================== -->
   <!-- MENSAJES -->
+  <!-- ====================================== -->
+
   <div
     *ngIf="mensajeExito"
     class="alert alert-success"
@@ -17,7 +20,10 @@
     {{ mensajeError }}
   </div>
 
+  <!-- ====================================== -->
   <!-- FORMULARIO DE SALIDA -->
+  <!-- ====================================== -->
+
   <div class="card mb-4">
 
     <div class="card-header">
@@ -30,20 +36,62 @@
 
         <div class="row">
 
-          <div class="col-md-3 mb-3">
-            <label class="form-label">ID del albergado</label>
-
-            <input
-              type="number"
-              class="form-control"
-              name="id_albergado"
-              [(ngModel)]="nuevaSalida.id_albergado"
-              min="1"
-              required>
-          </div>
+          <!-- SELECCIONAR ALBERGADO -->
 
           <div class="col-md-4 mb-3">
-            <label class="form-label">Motivo de salida</label>
+
+            <label class="form-label">
+              Seleccionar albergado
+            </label>
+
+            <select
+              class="form-select"
+              name="id_albergado"
+              [(ngModel)]="nuevaSalida.id_albergado"
+              [disabled]="cargandoAlbergados"
+              required>
+
+              <option [ngValue]="null">
+                Seleccione un albergado...
+              </option>
+
+              <option
+                *ngFor="let albergado of albergadosActivos"
+                [ngValue]="albergado.id_albergado">
+
+                {{ albergado.nombres }}
+                {{ albergado.apellidos }}
+                - DNI: {{ albergado.dni }}
+
+              </option>
+
+            </select>
+
+            <small
+              *ngIf="cargandoAlbergados"
+              class="text-muted">
+
+              Cargando albergados...
+
+            </small>
+
+            <small
+              *ngIf="!cargandoAlbergados && albergadosActivos.length === 0"
+              class="text-danger">
+
+              No hay albergados disponibles en Portería.
+
+            </small>
+
+          </div>
+
+          <!-- MOTIVO DE SALIDA -->
+
+          <div class="col-md-4 mb-3">
+
+            <label class="form-label">
+              Motivo de salida
+            </label>
 
             <input
               type="text"
@@ -52,10 +100,16 @@
               [(ngModel)]="nuevaSalida.motivo_salida"
               placeholder="Ingrese el motivo"
               required>
+
           </div>
 
-          <div class="col-md-5 mb-3">
-            <label class="form-label">Observaciones</label>
+          <!-- OBSERVACIONES -->
+
+          <div class="col-md-4 mb-3">
+
+            <label class="form-label">
+              Observaciones
+            </label>
 
             <input
               type="text"
@@ -63,30 +117,48 @@
               name="observaciones"
               [(ngModel)]="nuevaSalida.observaciones"
               placeholder="Observaciones adicionales">
+
           </div>
 
         </div>
 
+        <!-- BOTÓN REGISTRAR -->
+
         <button
           type="submit"
           class="btn btn-primary"
-          [disabled]="guardando || formSalida.invalid">
+          [disabled]="
+            guardando ||
+            cargandoAlbergados ||
+            formSalida.invalid
+          ">
 
-          {{ guardando ? 'Registrando...' : 'Registrar salida' }}
+          {{
+            guardando
+              ? 'Registrando...'
+              : 'Registrar salida'
+          }}
 
         </button>
 
       </form>
 
     </div>
+
   </div>
 
+  <!-- ====================================== -->
   <!-- HISTORIAL DE MOVIMIENTOS -->
+  <!-- ====================================== -->
+
   <div class="card">
 
-    <div class="card-header d-flex justify-content-between align-items-center">
+    <div
+      class="card-header d-flex justify-content-between align-items-center">
 
-      <h5 class="mb-0">Historial de movimientos</h5>
+      <h5 class="mb-0">
+        Historial de movimientos
+      </h5>
 
       <button
         type="button"
@@ -94,7 +166,7 @@
         (click)="cargarDatos()"
         [disabled]="cargando">
 
-        Actualizar
+        {{ cargando ? 'Actualizando...' : 'Actualizar' }}
 
       </button>
 
@@ -102,54 +174,126 @@
 
     <div class="card-body">
 
-      <div *ngIf="cargando" class="text-center p-3">
+      <!-- CARGANDO -->
+
+      <div
+        *ngIf="cargando"
+        class="text-center p-3">
+
         Cargando movimientos...
+
       </div>
 
-      <div class="table-responsive" *ngIf="!cargando">
+      <!-- TABLA -->
 
-        <table class="table table-bordered table-hover">
+      <div
+        class="table-responsive"
+        *ngIf="!cargando">
+
+        <table class="table table-bordered table-hover align-middle">
 
           <thead class="table-light">
+
             <tr>
+
               <th>ID acceso</th>
-              <th>ID albergado</th>
+
+              <th>Albergado</th>
+
+              <th>DNI</th>
+
               <th>Fecha y hora de salida</th>
+
               <th>Fecha y hora de retorno</th>
+
               <th>Motivo</th>
+
               <th>Observaciones</th>
+
               <th>Estado</th>
+
               <th>Acción</th>
+
             </tr>
+
           </thead>
 
           <tbody>
 
             <tr *ngFor="let acceso of accesos">
 
-              <td>{{ acceso.id_acceso }}</td>
-
-              <td>{{ acceso.id_albergado }}</td>
+              <!-- ID ACCESO -->
 
               <td>
-                {{ acceso.fecha_hora_salida | date:'dd/MM/yyyy HH:mm' }}
+                {{ acceso.id_acceso }}
               </td>
 
+              <!-- NOMBRE DEL ALBERGADO -->
+
               <td>
+
+                {{ obtenerNombreAlbergado(acceso.id_albergado) }}
+
+              </td>
+
+              <!-- DNI -->
+
+              <td>
+
+                {{ obtenerDniAlbergado(acceso.id_albergado) }}
+
+              </td>
+
+              <!-- FECHA DE SALIDA -->
+
+              <td>
+
+                {{
+                  acceso.fecha_hora_salida
+                    | date:'dd/MM/yyyy HH:mm'
+                }}
+
+              </td>
+
+              <!-- FECHA DE RETORNO -->
+
+              <td>
+
                 <span *ngIf="acceso.fecha_hora_retorno">
-                  {{ acceso.fecha_hora_retorno | date:'dd/MM/yyyy HH:mm' }}
+
+                  {{
+                    acceso.fecha_hora_retorno
+                      | date:'dd/MM/yyyy HH:mm'
+                  }}
+
                 </span>
 
-                <span *ngIf="!acceso.fecha_hora_retorno">
+                <span
+                  *ngIf="!acceso.fecha_hora_retorno"
+                  class="text-warning">
+
                   Pendiente
+
                 </span>
+
               </td>
 
-              <td>{{ acceso.motivo_salida }}</td>
-
-              <td>{{ acceso.observaciones || '-' }}</td>
+              <!-- MOTIVO -->
 
               <td>
+                {{ acceso.motivo_salida }}
+              </td>
+
+              <!-- OBSERVACIONES -->
+
+              <td>
+                {{ acceso.observaciones || '-' }}
+              </td>
+
+              <!-- ESTADO -->
+
+              <td>
+
                 <span
                   class="badge"
                   [ngClass]="{
@@ -160,7 +304,10 @@
                   {{ obtenerEstado(acceso) }}
 
                 </span>
+
               </td>
+
+              <!-- ACCIONES -->
 
               <td>
 
@@ -179,18 +326,30 @@
 
                 </button>
 
-                <span *ngIf="acceso.fecha_hora_retorno">
+                <span
+                  *ngIf="acceso.fecha_hora_retorno"
+                  class="text-success">
+
                   Completado
+
                 </span>
 
               </td>
 
             </tr>
 
+            <!-- SIN MOVIMIENTOS -->
+
             <tr *ngIf="accesos.length === 0">
-              <td colspan="8" class="text-center">
+
+              <td
+                colspan="9"
+                class="text-center">
+
                 No hay movimientos registrados.
+
               </td>
+
             </tr>
 
           </tbody>
@@ -200,6 +359,7 @@
       </div>
 
     </div>
+
   </div>
 
 </div>

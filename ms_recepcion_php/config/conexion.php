@@ -1,23 +1,32 @@
 <?php
+
 class Conexion {
+
     private $host = "localhost";
     private $db_name = "bd_recepcion";
-    private $username = "root"; // Cambia si tu MySQL tiene otra credencial
-    private $password = "123456"; 
-    public $conn;
+    private $username = "root";
+    private $password = "123456";
 
     public function obtenerConexion() {
-        $this->conn = null;
+
         try {
-            $this->conn = new PDO("mysql:host=" . $this->host . ";dbname=" . $this->db_name, $this->username, $this->password);
-            // Configurar PDO para que lance excepciones en caso de error
-            $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-            // Forzar el uso de UTF-8 para nombres o comunidades con tildes
-            $this->conn->exec("set names utf8");
-        } catch(PDOException $exception) {
-            echo "Error de conexión: " . $exception->getMessage();
+            $dsn = "mysql:host={$this->host};dbname={$this->db_name};charset=utf8mb4";
+
+            $conn = new PDO(
+                $dsn,
+                $this->username,
+                $this->password
+            );
+
+            $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            $conn->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+            $conn->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
+
+            return $conn;
+
+        } catch (PDOException $e) {
+            error_log("Error de conexión MySQL: " . $e->getMessage());
+            throw new RuntimeException("No se pudo conectar a MySQL.", 0, $e);
         }
-        return $this->conn;
     }
 }
-?>

@@ -11,6 +11,7 @@ export class ApiService {
   private urlRecepcionListar = 'http://localhost:8000/api/api_albergados.php?accion=listar';
   private urlComedorListar = 'http://localhost:3000/api/comedor/listar';
   private urlPorteriaListar = 'http://localhost:8080/api/porteria/listar';
+  private urlPorteriaAlbergados = 'http://localhost:8080/api/porteria/albergados';
   private urlComedorAlbergados = 'http://localhost:3000/api/comedor/albergados';
 
   // POSTs (Insertar)
@@ -37,6 +38,10 @@ export class ApiService {
   getPorteriaDatos(): Observable<any> {
     return this.http.get(this.urlPorteriaListar);
   }
+// LISTAR ALBERGADOS DESDE LA BASE LOCAL DE PORTERÍA
+getPorteriaAlbergados(): Observable<any> {
+  return this.http.get(this.urlPorteriaAlbergados);
+}
 
   // REGISTRAR
   registrarAlbergado(datos: any): Observable<any> {

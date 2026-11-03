@@ -79,7 +79,7 @@ function verificarAcompanantesActivos($db, $idPaciente) {
 }
 
 $accion = isset($_GET['accion']) ? $_GET['accion'] : '';
-$metodos = array('activos'=>'GET','listar'=>'GET','habitaciones_disponibles'=>'GET','listar_pacientes'=>'GET','registrar'=>'POST','editar'=>'POST','dar_baja'=>'POST');
+$metodos = array('activos'=>'GET','listar'=>'GET','listar_sincronizacion'=>'GET','habitaciones_disponibles'=>'GET','listar_pacientes'=>'GET','registrar'=>'POST','editar'=>'POST','dar_baja'=>'POST');
 if (!isset($metodos[$accion])) respuesta(404, 'error', 'Accion no valida.');
 if ($_SERVER['REQUEST_METHOD'] !== $metodos[$accion]) respuesta(405, 'error', 'Metodo HTTP no permitido.');
 
@@ -99,7 +99,28 @@ try {
             $st = $db->query("SELECT * FROM albergados WHERE estado = 'Activo' ORDER BY id_albergado DESC");
             respuesta(200, 'success', 'Consulta correcta.', array('data' => $st->fetchAll(PDO::FETCH_ASSOC)));
             break;
+        case 'listar_sincronizacion':
 
+    $st = $db->query(
+        "SELECT
+            id_albergado,
+            dni,
+            nombres,
+            apellidos,
+            tipo,
+            estado
+         FROM albergados
+         ORDER BY id_albergado DESC"
+    );
+
+    respuesta(
+        200,
+        'success',
+        'Datos para sincronización obtenidos correctamente.',
+        array('data' => $st->fetchAll(PDO::FETCH_ASSOC))
+    );
+
+    break;
         case 'listar_pacientes':
             $st = $db->query("SELECT id_albergado, nombres, apellidos, dni FROM albergados WHERE tipo = 'Paciente' AND estado = 'Activo' ORDER BY nombres, apellidos");
             respuesta(200, 'success', 'Consulta correcta.', array('data' => $st->fetchAll(PDO::FETCH_ASSOC)));

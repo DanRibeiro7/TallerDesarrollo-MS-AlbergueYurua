@@ -45,9 +45,9 @@ async function sincronizarAlbergados() {
 
     // Consultar Recepción con un tiempo máximo de espera
     const respuesta = await fetch(
-        `${RECEPCION_URL}?accion=listar`,
-        { signal: AbortSignal.timeout(5000) }
-    );
+    `${RECEPCION_URL}?accion=listar_sincronizacion`,
+    { signal: AbortSignal.timeout(5000) }
+);
 
     if (!respuesta.ok) {
         throw new Error('Recepción no está disponible.');
@@ -512,8 +512,65 @@ app.get('/api/comedor/albergados', async (req, res) => {
         });
     }
 });
+// =====================================================
+// SINCRONIZACIÓN AUTOMÁTICA CON RECEPCIÓN
+// =====================================================
+
+const INTERVALO_SINCRONIZACION = 30000; // 30 segundos
+
+let sincronizacionEnProceso = false;
+
+async function ejecutarSincronizacionAutomatica() {
+
+    // Evitar sincronizaciones simultáneas
+    if (sincronizacionEnProceso) {
+        return;
+    }
+
+    sincronizacionEnProceso = true;
+
+    try {
+
+        console.log(
+            '[COMEDOR] Iniciando sincronización automática...'
+        );
+
+        const total = await sincronizarAlbergados();
+
+        console.log(
+            `[COMEDOR] Sincronización correcta. ${total} albergados recibidos.`
+        );
+
+    } catch (error) {
+
+        console.log(
+            '[COMEDOR] Recepción no disponible. Se conservarán los datos locales.'
+        );
+
+    } finally {
+
+        sincronizacionEnProceso = false;
+
+    }
+}
+
+// =====================================================
+// INICIAR SERVIDOR NODE.JS
+// =====================================================
+
 app.listen(PORT, () => {
+
     console.log(
         `Servidor Node.js corriendo en http://localhost:${PORT}`
     );
+
+    // Primera sincronización al iniciar
+    ejecutarSincronizacionAutomatica();
+
+    // Sincronización periódica cada 30 segundos
+    setInterval(
+        ejecutarSincronizacionAutomatica,
+        INTERVALO_SINCRONIZACION
+    );
+
 });
