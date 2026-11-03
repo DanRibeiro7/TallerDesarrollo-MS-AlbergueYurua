@@ -1,27 +1,255 @@
 <h3>Módulo de Comedor (Backend: Node.js)</h3>
 
-<div style="background: #e9ecef; padding: 15px; margin-bottom: 20px;">
+<!-- ====================================== -->
+<!-- PLANIFICACIÓN DIARIA DE RACIONES       -->
+<!-- ====================================== -->
+
+<div
+  style="
+    background: #e9ecef;
+    padding: 15px;
+    margin-bottom: 20px;
+  "
+>
+
+  <h4>Planificación Diaria de Raciones</h4>
+
+  <div *ngIf="cargandoCalculo">
+    Calculando raciones...
+  </div>
+
+  <div *ngIf="calculoDiario && !cargandoCalculo">
+
+    <p>
+      <strong>Fecha:</strong>
+      {{ calculoDiario.fecha }}
+    </p>
+
+    <table
+      border="1"
+      cellpadding="10"
+      style="
+        border-collapse: collapse;
+        width: 100%;
+        background: white;
+        margin-bottom: 15px;
+      "
+    >
+
+      <thead style="background: #f2f2f2;">
+        <tr>
+          <th>Concepto</th>
+          <th>Cantidad</th>
+        </tr>
+      </thead>
+
+      <tbody>
+
+        <tr>
+          <td>Albergados activos</td>
+          <td>{{ calculoDiario.albergados_activos }}</td>
+        </tr>
+
+        <tr>
+          <td>Desayunos necesarios</td>
+          <td>{{ calculoDiario.desayunos }}</td>
+        </tr>
+
+        <tr>
+          <td>Almuerzos necesarios</td>
+          <td>{{ calculoDiario.almuerzos }}</td>
+        </tr>
+
+        <tr>
+          <td>Cenas necesarias</td>
+          <td>{{ calculoDiario.cenas }}</td>
+        </tr>
+
+        <tr style="background: #d4edda;">
+          <td>
+            <strong>Total de raciones diarias</strong>
+          </td>
+
+          <td>
+            <strong>{{ calculoDiario.total_raciones }}</strong>
+          </td>
+        </tr>
+
+      </tbody>
+
+    </table>
+
+  </div>
+
+  <button
+    (click)="calcularRaciones()"
+    [disabled]="cargandoCalculo || guardandoCalculo"
+    style="margin-right: 10px;"
+  >
+    Actualizar Cálculo
+  </button>
+
+  <button
+    (click)="guardarPlanificacion()"
+    [disabled]="!calculoDiario || guardandoCalculo || cargandoCalculo"
+  >
+    {{ guardandoCalculo ? 'Guardando...' : 'Guardar Planificación' }}
+  </button>
+
+</div>
+
+
+<!-- ====================================== -->
+<!-- REGISTRAR CONSUMO                      -->
+<!-- ====================================== -->
+
+<div
+  style="
+    background: #e9ecef;
+    padding: 15px;
+    margin-bottom: 20px;
+  "
+>
+
   <h4>Registrar Ración</h4>
-  <input type="number" placeholder="ID Albergado" [(ngModel)]="nuevoConsumo.id_albergado" style="margin-right: 10px;">
-  <select [(ngModel)]="nuevoConsumo.tipo_comida" style="margin-right: 10px;">
+
+  <!-- Seleccionar albergado -->
+
+  <select
+    [(ngModel)]="nuevoConsumo.id_albergado"
+    style="
+      margin-right: 10px;
+      min-width: 300px;
+    "
+  >
+
+    <option [ngValue]="null">
+      Seleccione un albergado...
+    </option>
+
+    <option
+      *ngFor="let albergado of albergadosActivos"
+      [ngValue]="albergado.id_albergado"
+    >
+
+      {{ albergado.nombres }}
+      {{ albergado.apellidos }}
+      - DNI: {{ albergado.dni }}
+
+    </option>
+
+  </select>
+
+  <!-- Seleccionar comida -->
+
+  <select
+    [(ngModel)]="nuevoConsumo.tipo_comida"
+    style="margin-right: 10px;"
+  >
+
     <option value="Desayuno">Desayuno</option>
     <option value="Almuerzo">Almuerzo</option>
     <option value="Cena">Cena</option>
+
   </select>
-  <button (click)="registrar()">Registrar Consumo</button>
+  <!-- Seleccionar estado de entrega -->
+
+<select
+  [(ngModel)]="nuevoConsumo.estado_entrega"
+  style="margin-right: 10px;"
+>
+  <option [ngValue]="0">Pendiente</option>
+  <option [ngValue]="1">Entregado</option>
+</select>
+  <button (click)="registrar()">
+    Registrar Consumo
+  </button>
+
 </div>
 
-<table border="1" cellpadding="10" style="border-collapse: collapse; width: 100%;">
+
+<!-- ====================================== -->
+<!-- HISTORIAL DE CONSUMOS                  -->
+<!-- ====================================== -->
+
+<h4>Historial de Consumos</h4>
+
+<table
+  border="1"
+  cellpadding="10"
+  style="
+    border-collapse: collapse;
+    width: 100%;
+  "
+>
+
   <thead style="background-color: #f2f2f2;">
-    <tr><th>ID Consumo</th><th>ID Albergado</th><th>Fecha y Hora</th><th>Tipo de Comida</th><th>Estado</th></tr>
+
+ <tr>
+  <th>ID Consumo</th>
+  <th>Albergado</th>
+  <th>Fecha y Hora</th>
+  <th>Tipo de Comida</th>
+  <th>Estado</th>
+  <th>Acciones</th>
+</tr>
+
   </thead>
+
   <tbody>
+
     <tr *ngFor="let item of consumos">
-      <td>{{ item.id_consumo }}</td>
-      <td>{{ item.id_albergado }}</td>
-      <td>{{ item.fecha_hora }}</td>
-      <td>{{ item.tipo_comida }}</td>
-      <td>{{ item.estado_entrega === 1 ? 'Entregado' : 'Pendiente' }}</td>
+
+      <td>
+        {{ item.id_consumo }}
+      </td>
+
+      <td>
+        {{ obtenerNombreAlbergado(item.id_albergado) }}
+      </td>
+
+      <td>
+        {{ item.fecha_hora }}
+      </td>
+
+      <td>
+        {{ item.tipo_comida }}
+      </td>
+
+      <td>
+        {{ item.estado_entrega == 1 ? 'Entregado' : 'Pendiente' }}
+      </td>
+      <td>
+
+  <button
+    *ngIf="item.estado_entrega == 0"
+    (click)="marcarEntregado(item)"
+    style="
+      background-color: #28a745;
+      color: white;
+      border: none;
+      padding: 6px 10px;
+      cursor: pointer;
+    "
+  >
+    Marcar como entregado
+  </button>
+
+  <span *ngIf="item.estado_entrega == 1">
+    —
+  </span>
+
+</td>
     </tr>
+
+    <tr *ngIf="consumos.length === 0">
+
+      <td colspan="6" style="text-align: center;">
+        No hay consumos registrados.
+      </td>
+
+    </tr>
+
   </tbody>
+
 </table>

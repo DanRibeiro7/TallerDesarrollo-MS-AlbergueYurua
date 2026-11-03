@@ -1,0 +1,23 @@
+# Node.js y Angular
+node_modules/
+dist/
+.angular/
+coverage/
+
+# Java / Maven
+target/
+.mvn/wrapper/maven-wrapper.jar
+
+# Variables de entorno y credenciales
+.env
+.env.*
+!.env.example
+
+# Archivos temporales
+*.log
+.DS_Store
+Thumbs.db
+
+# Editores
+.vscode/
+.idea/

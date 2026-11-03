@@ -1,27 +1,80 @@
 <h3>Módulo de Recepción (Backend: PHP)</h3>
 
 <div style="background: #e9ecef; padding: 15px; margin-bottom: 20px;">
-  <h4>Registrar Nuevo Albergado</h4>
+  <h4>Gestión de Albergados</h4>
+  
+  <input type="text" placeholder="DNI (8 dígitos)" [(ngModel)]="nuevoAlbergado.dni" maxlength="8" (input)="soloNumeros($event)" style="margin-right: 10px; width: 110px;">
   <input type="text" placeholder="Nombres" [(ngModel)]="nuevoAlbergado.nombres" style="margin-right: 10px;">
   <input type="text" placeholder="Apellidos" [(ngModel)]="nuevoAlbergado.apellidos" style="margin-right: 10px;">
-  <select [(ngModel)]="nuevoAlbergado.tipo" style="margin-right: 10px;">
-    <option value="Paciente">Paciente</option>
-    <option value="Acompañante">Acompañante</option>
+  <input type="text" placeholder="Comunidad" [(ngModel)]="nuevoAlbergado.comunidad_origen" style="margin-right: 10px;">
+  
+  <select
+  [(ngModel)]="nuevoAlbergado.tipo"
+  (change)="cambiarTipo()"
+  style="margin-right: 10px;"
+>
+  <option value="Paciente">Paciente</option>
+  <option value="Acompañante">Acompañante</option>
+  <option value="Estudiante">Estudiante</option>
+</select>
+
+<!-- Solo aparece cuando se selecciona Acompañante -->
+<select
+  *ngIf="nuevoAlbergado.tipo === 'Acompañante'"
+  [(ngModel)]="nuevoAlbergado.id_paciente_vinculado"
+  style="margin-right: 10px;"
+>
+  <option [ngValue]="null">Seleccione paciente...</option>
+
+  <option
+    *ngFor="let paciente of pacientesActivos"
+    [ngValue]="paciente.id_albergado"
+  >
+    {{ paciente.nombres }} {{ paciente.apellidos }} - DNI: {{ paciente.dni }}
+  </option>
+</select>
+
+  <select [(ngModel)]="nuevoAlbergado.id_habitacion" style="margin-right: 10px;">
+    <option value="">Seleccione Habitación...</option>
+    <option *ngFor="let hab of habitacionesDisponibles" [value]="hab.id_habitacion">
+      Cuarto {{ hab.numero_cuarto }} (Libres: {{ hab.espacio_libre }})
+    </option>
   </select>
-  <button (click)="registrar()">Registrar Recepción</button>
+
+  <button (click)="registrar()">{{ nuevoAlbergado.id_albergado ? 'Actualizar' : 'Registrar' }}</button>
+  <button *ngIf="nuevoAlbergado.id_albergado" (click)="cancelarEdicion()" style="margin-left: 5px;">Cancelar</button>
 </div>
 
 <table border="1" cellpadding="10" style="border-collapse: collapse; width: 100%;">
   <thead style="background-color: #f2f2f2;">
-    <tr><th>ID</th><th>Nombres</th><th>Apellidos</th><th>DNI</th><th>Tipo</th></tr>
+    <tr>
+      <th>ID</th>
+      <th>DNI</th>
+      <th>Nombres</th>
+      <th>Apellidos</th>
+      <th>Comunidad</th>
+     <th>Tipo</th>
+     <th>Paciente vinculado</th>
+     <th>Acciones</th>
+    </tr>
   </thead>
   <tbody>
     <tr *ngFor="let item of albergados">
       <td>{{ item.id_albergado }}</td>
+      <td>{{ item.dni }}</td>
       <td>{{ item.nombres }}</td>
       <td>{{ item.apellidos }}</td>
-      <td>{{ item.dni }}</td>
+      <td>{{ item.comunidad_origen }}</td>
       <td>{{ item.tipo }}</td>
+
+<td>
+  {{ obtenerNombrePaciente(item.id_paciente_vinculado) }}
+</td>
+
+<td>
+  <button (click)="seleccionarParaEditar(item)">Editar</button>
+        <button (click)="darBaja(item.id_albergado)" style="margin-left: 5px; background-color: #dc3545; color: white; border: none; padding: 3px 8px; cursor: pointer;">Dar de Baja</button>
+      </td>
     </tr>
   </tbody>
 </table>
