@@ -78,38 +78,52 @@ export class ComedorComponent implements OnInit {
   // CONSULTAR ALBERGADOS ACTIVOS
   // ==========================================
 
-  cargarAlbergados(): void {
+  // ==========================================
+// CONSULTAR ALBERGADOS DESDE COMEDOR (NODE.JS)
+// ==========================================
 
-    const url =
-      'http://localhost:8000/api/api_albergados.php?accion=listar';
+cargarAlbergados(): void {
 
-    this.http.get<any>(url).subscribe({
+  this.apiService.getComedorAlbergados().subscribe({
 
-      next: (res: any) => {
+    next: (res: any) => {
 
-        if (res.status === 'success') {
+      if (res.status === 'success' && Array.isArray(res.data)) {
 
-          this.albergadosActivos = res.data.map((item: any) => ({
-            ...item,
-            id_albergado: Number(item.id_albergado)
-          }));
+        this.albergadosActivos = res.data.map((item: any) => ({
+          ...item,
+          id_albergado: Number(item.id_albergado)
+        }));
 
-        }
-
-      },
-
-      error: (error: any) => {
-
-        console.error('Error al cargar albergados:', error);
-
-        alert(
-          'No se pudieron cargar los albergados desde Recepción.'
+        console.log(
+          'Albergados cargados desde Comedor:',
+          this.albergadosActivos.length
         );
+
+      } else {
+
+        console.error('Respuesta inválida de Comedor:', res);
+        this.albergadosActivos = [];
 
       }
 
-    });
-  }
+    },
+
+    error: (error: any) => {
+
+      console.error(
+        'Error al cargar albergados desde Comedor:',
+        error
+      );
+
+      alert(
+        'No se pudieron cargar los albergados desde Comedor.'
+      );
+
+    }
+
+  });
+}
 
   // ==========================================
   // MOSTRAR NOMBRE DEL ALBERGADO

@@ -16,25 +16,89 @@ app.use(express.json());
 // FUNCIONES AUXILIARES
 // =====================================================
 
-// Consultar la lista de albergados activos desde PHP
+// =====================================================
+// CONSULTAR ALBERGADOS ACTIVOS DESDE BD_COMEDOR
+// =====================================================
+
 async function obtenerAlbergadosActivos() {
+
+    const [albergados] = await db.query(`
+        SELECT
+            id_albergado,
+            dni,
+            nombres,
+            apellidos,
+            tipo,
+            estado
+        FROM albergados_referencia
+        WHERE estado = 'Activo'
+        ORDER BY nombres, apellidos
+    `);
+
+    return albergados;
+}
+// =====================================================
+// SINCRONIZAR ALBERGADOS DESDE RECEPCIÓN
+// =====================================================
+
+async function sincronizarAlbergados() {
+
+    // Consultar Recepción con un tiempo máximo de espera
     const respuesta = await fetch(
-        `${RECEPCION_URL}?accion=listar`
+        `${RECEPCION_URL}?accion=listar`,
+        { signal: AbortSignal.timeout(5000) }
     );
 
     if (!respuesta.ok) {
-        throw new Error('No se pudo consultar Recepción.');
+        throw new Error('Recepción no está disponible.');
     }
 
-    const datos = await respuesta.json();
+    const resultado = await respuesta.json();
 
-    if (datos.status !== 'success' || !Array.isArray(datos.data)) {
-        throw new Error('Recepción devolvió una respuesta inválida.');
+    if (
+        resultado.status !== 'success' ||
+        !Array.isArray(resultado.data)
+    ) {
+        throw new Error('Recepción devolvió datos inválidos.');
     }
 
-    return datos.data;
+    const albergados = resultado.data;
+
+    // Actualizar los registros locales sin eliminar los existentes
+    for (const albergado of albergados) {
+
+        await db.query(
+            `INSERT INTO albergados_referencia
+                (
+                    id_albergado,
+                    dni,
+                    nombres,
+                    apellidos,
+                    tipo,
+                    estado,
+                    ultima_sincronizacion
+                )
+             VALUES (?, ?, ?, ?, ?, ?, NOW())
+             ON DUPLICATE KEY UPDATE
+                dni = VALUES(dni),
+                nombres = VALUES(nombres),
+                apellidos = VALUES(apellidos),
+                tipo = VALUES(tipo),
+                estado = VALUES(estado),
+                ultima_sincronizacion = NOW()`,
+            [
+                albergado.id_albergado,
+                albergado.dni,
+                albergado.nombres,
+                albergado.apellidos,
+                albergado.tipo,
+                albergado.estado
+            ]
+        );
+    }
+
+    return albergados.length;
 }
-
 // Obtener la fecha actual según la zona horaria de Perú
 function obtenerFechaPeru() {
     const partes = new Intl.DateTimeFormat('en-CA', {
@@ -68,7 +132,32 @@ async function calcularRaciones() {
         total_raciones: totalActivos * 3
     };
 }
+// =====================================================
+// SINCRONIZACIÓN MANUAL DE ALBERGADOS
+// =====================================================
 
+app.post('/api/comedor/sincronizar-albergados', async (req, res) => {
+
+    try {
+
+        const total = await sincronizarAlbergados();
+
+        return res.json({
+            status: 'success',
+            message: 'Albergados sincronizados correctamente.',
+            total_albergados: total
+        });
+
+    } catch (error) {
+
+        console.error('Error de sincronización:', error);
+
+        return res.status(503).json({
+            status: 'error',
+            message: 'No se pudo sincronizar con Recepción.'
+        });
+    }
+});
 // =====================================================
 // RUTA PRINCIPAL
 // =====================================================
@@ -390,7 +479,39 @@ app.post('/api/comedor/marcar-entregado', async (req, res) => {
 // =====================================================
 // INICIAR SERVIDOR NODE.JS
 // =====================================================
+// =====================================================
+// LISTAR ALBERGADOS DESDE LA BASE DE DATOS LOCAL
+// =====================================================
 
+app.get('/api/comedor/albergados', async (req, res) => {
+    try {
+        const [albergados] = await db.query(`
+            SELECT
+                id_albergado,
+                dni,
+                nombres,
+                apellidos,
+                tipo,
+                estado
+            FROM albergados_referencia
+            WHERE estado = 'Activo'
+            ORDER BY nombres, apellidos
+        `);
+
+        return res.json({
+            status: 'success',
+            data: albergados
+        });
+
+    } catch (error) {
+        console.error('Error al consultar albergados:', error);
+
+        return res.status(500).json({
+            status: 'error',
+            message: 'No se pudieron consultar los albergados locales.'
+        });
+    }
+});
 app.listen(PORT, () => {
     console.log(
         `Servidor Node.js corriendo en http://localhost:${PORT}`

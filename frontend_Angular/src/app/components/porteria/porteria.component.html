@@ -1,30 +1,205 @@
-<h3>Módulo de Portería (Backend: Java)</h3>
+<div class="container mt-4">
 
-<div style="background: #e9ecef; padding: 15px; margin-bottom: 20px;">
-  <h4>Registrar Salida</h4>
-  <input type="number" placeholder="ID Albergado" [(ngModel)]="nuevaSalida.id_albergado" style="margin-right: 10px;">
-  <input type="text" placeholder="Motivo" [(ngModel)]="nuevaSalida.motivo_salida" style="margin-right: 10px;">
-  <input type="text" placeholder="Observación" [(ngModel)]="nuevaSalida.observaciones" style="margin-right: 10px;">
-  <button (click)="registrar()">Registrar Salida</button>
+  <h2 class="mb-4">Control de Portería</h2>
+
+  <!-- MENSAJES -->
+  <div
+    *ngIf="mensajeExito"
+    class="alert alert-success"
+    role="alert">
+    {{ mensajeExito }}
+  </div>
+
+  <div
+    *ngIf="mensajeError"
+    class="alert alert-danger"
+    role="alert">
+    {{ mensajeError }}
+  </div>
+
+  <!-- FORMULARIO DE SALIDA -->
+  <div class="card mb-4">
+
+    <div class="card-header">
+      <h5 class="mb-0">Registrar salida de albergado</h5>
+    </div>
+
+    <div class="card-body">
+
+      <form (ngSubmit)="registrar()" #formSalida="ngForm">
+
+        <div class="row">
+
+          <div class="col-md-3 mb-3">
+            <label class="form-label">ID del albergado</label>
+
+            <input
+              type="number"
+              class="form-control"
+              name="id_albergado"
+              [(ngModel)]="nuevaSalida.id_albergado"
+              min="1"
+              required>
+          </div>
+
+          <div class="col-md-4 mb-3">
+            <label class="form-label">Motivo de salida</label>
+
+            <input
+              type="text"
+              class="form-control"
+              name="motivo_salida"
+              [(ngModel)]="nuevaSalida.motivo_salida"
+              placeholder="Ingrese el motivo"
+              required>
+          </div>
+
+          <div class="col-md-5 mb-3">
+            <label class="form-label">Observaciones</label>
+
+            <input
+              type="text"
+              class="form-control"
+              name="observaciones"
+              [(ngModel)]="nuevaSalida.observaciones"
+              placeholder="Observaciones adicionales">
+          </div>
+
+        </div>
+
+        <button
+          type="submit"
+          class="btn btn-primary"
+          [disabled]="guardando || formSalida.invalid">
+
+          {{ guardando ? 'Registrando...' : 'Registrar salida' }}
+
+        </button>
+
+      </form>
+
+    </div>
+  </div>
+
+  <!-- HISTORIAL DE MOVIMIENTOS -->
+  <div class="card">
+
+    <div class="card-header d-flex justify-content-between align-items-center">
+
+      <h5 class="mb-0">Historial de movimientos</h5>
+
+      <button
+        type="button"
+        class="btn btn-outline-primary btn-sm"
+        (click)="cargarDatos()"
+        [disabled]="cargando">
+
+        Actualizar
+
+      </button>
+
+    </div>
+
+    <div class="card-body">
+
+      <div *ngIf="cargando" class="text-center p-3">
+        Cargando movimientos...
+      </div>
+
+      <div class="table-responsive" *ngIf="!cargando">
+
+        <table class="table table-bordered table-hover">
+
+          <thead class="table-light">
+            <tr>
+              <th>ID acceso</th>
+              <th>ID albergado</th>
+              <th>Fecha y hora de salida</th>
+              <th>Fecha y hora de retorno</th>
+              <th>Motivo</th>
+              <th>Observaciones</th>
+              <th>Estado</th>
+              <th>Acción</th>
+            </tr>
+          </thead>
+
+          <tbody>
+
+            <tr *ngFor="let acceso of accesos">
+
+              <td>{{ acceso.id_acceso }}</td>
+
+              <td>{{ acceso.id_albergado }}</td>
+
+              <td>
+                {{ acceso.fecha_hora_salida | date:'dd/MM/yyyy HH:mm' }}
+              </td>
+
+              <td>
+                <span *ngIf="acceso.fecha_hora_retorno">
+                  {{ acceso.fecha_hora_retorno | date:'dd/MM/yyyy HH:mm' }}
+                </span>
+
+                <span *ngIf="!acceso.fecha_hora_retorno">
+                  Pendiente
+                </span>
+              </td>
+
+              <td>{{ acceso.motivo_salida }}</td>
+
+              <td>{{ acceso.observaciones || '-' }}</td>
+
+              <td>
+                <span
+                  class="badge"
+                  [ngClass]="{
+                    'bg-danger': obtenerEstado(acceso) === 'FUERA',
+                    'bg-success': obtenerEstado(acceso) === 'RETORNÓ'
+                  }">
+
+                  {{ obtenerEstado(acceso) }}
+
+                </span>
+              </td>
+
+              <td>
+
+                <button
+                  *ngIf="!acceso.fecha_hora_retorno"
+                  type="button"
+                  class="btn btn-success btn-sm"
+                  (click)="registrarRetorno(acceso)"
+                  [disabled]="retornoEnProceso !== null">
+
+                  {{
+                    retornoEnProceso === acceso.id_acceso
+                      ? 'Registrando...'
+                      : 'Registrar retorno'
+                  }}
+
+                </button>
+
+                <span *ngIf="acceso.fecha_hora_retorno">
+                  Completado
+                </span>
+
+              </td>
+
+            </tr>
+
+            <tr *ngIf="accesos.length === 0">
+              <td colspan="8" class="text-center">
+                No hay movimientos registrados.
+              </td>
+            </tr>
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+    </div>
+  </div>
+
 </div>
-
-<table border="1" cellpadding="10" style="border-collapse: collapse; width: 100%;">
-  <thead style="background-color: #f2f2f2;">
-    <tr>
-      <th>ID Albergado</th>
-      <th>Fecha y Hora Salida</th>
-      <th>Fecha y Hora Retorno</th>
-      <th>Motivo</th>
-      <th>Observaciones</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr *ngFor="let item of accesos">
-      <td>{{ item.id_albergado }}</td>
-      <td>{{ item.fecha_hora_salida }}</td>
-      <td>{{ item.fecha_hora_retorno }}</td>
-      <td>{{ item.motivo_salida }}</td>
-      <td>{{ item.observaciones }}</td>
-    </tr>
-  </tbody>
-</table>
