@@ -1,0 +1,11 @@
+# Scripts de Linux
+*.sh text eol=lf
+
+# Archivos de Docker
+Dockerfile text eol=lf
+*.dockerfile text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+
+# Configuración de Nginx
+*.conf text eol=lf

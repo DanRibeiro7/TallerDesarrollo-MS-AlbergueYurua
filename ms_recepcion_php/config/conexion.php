@@ -2,14 +2,28 @@
 
 class Conexion {
 
-    private $host = "localhost";
-    private $db_name = "bd_recepcion";
-    private $username = "root";
-    private $password = "123456";
+    private $host;
+    private $db_name;
+    private $username;
+    private $password;
+
+    public function __construct() {
+
+        // Configuración para entorno local o Docker
+        $this->host = getenv('DB_HOST') ?: 'localhost';
+        $this->db_name = getenv('DB_NAME') ?: 'bd_recepcion';
+        $this->username = getenv('DB_USER') ?: 'root';
+
+        $passwordEntorno = getenv('DB_PASSWORD');
+        $this->password = $passwordEntorno !== false
+            ? $passwordEntorno
+            : '';
+    }
 
     public function obtenerConexion() {
 
         try {
+
             $dsn = "mysql:host={$this->host};dbname={$this->db_name};charset=utf8mb4";
 
             $conn = new PDO(
@@ -25,8 +39,14 @@ class Conexion {
             return $conn;
 
         } catch (PDOException $e) {
+
             error_log("Error de conexión MySQL: " . $e->getMessage());
-            throw new RuntimeException("No se pudo conectar a MySQL.", 0, $e);
+
+            throw new RuntimeException(
+                "No se pudo conectar a MySQL.",
+                0,
+                $e
+            );
         }
     }
 }

@@ -7,7 +7,8 @@ const PORT = 3000;
 
 // API del microservicio de Recepción
 const RECEPCION_URL =
-    'http://localhost:8000/api/api_albergados.php';
+    process.env.RECEPCION_URL ||
+    'http://127.0.0.1:8000/api/api_albergados.php';
 
 app.use(cors());
 app.use(express.json());
@@ -363,7 +364,6 @@ app.get('/api/comedor/calculo-hoy', async (req, res) => {
 app.post('/api/comedor/guardar-calculo', async (req, res) => {
     try {
         // El cálculo se obtiene desde Recepción.
-        // No confiamos en cantidades enviadas por Angular.
         const calculo = await calcularRaciones();
 
         const [resultado] = await db.query(
@@ -403,7 +403,7 @@ app.post('/api/comedor/marcar-entregado', async (req, res) => {
 
         const { id_consumo } = req.body || {};
 
-        // 1. Validar el ID del consumo
+        // Validar el ID del consumo
         const id = Number(id_consumo);
 
         if (!Number.isSafeInteger(id) || id <= 0) {
@@ -413,7 +413,7 @@ app.post('/api/comedor/marcar-entregado', async (req, res) => {
             });
         }
 
-        // 2. Actualizar únicamente si está pendiente
+        // Actualizar únicamente si está pendiente
         const [resultado] = await db.query(
             `UPDATE registro_consumo
              SET estado_entrega = 1
@@ -422,7 +422,7 @@ app.post('/api/comedor/marcar-entregado', async (req, res) => {
             [id]
         );
 
-        // 3. Comprobar si se actualizó el registro
+        // Comprobar si se actualizó el registro
         if (resultado.affectedRows === 1) {
 
             return res.json({
@@ -433,7 +433,7 @@ app.post('/api/comedor/marcar-entregado', async (req, res) => {
 
         }
 
-        // 4. Si no se actualizó, consultar el motivo
+        // Si no se actualizó, consultar el motivo
         const [registros] = await db.query(
             `SELECT id_consumo, estado_entrega
              FROM registro_consumo

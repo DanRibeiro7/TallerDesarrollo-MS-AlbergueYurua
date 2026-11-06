@@ -1,0 +1,98 @@
+services:
+
+  mysql:
+    image: mysql:8.0
+    container_name: albergue_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      RECEPCION_DB_PASSWORD: ${RECEPCION_DB_PASSWORD}
+      COMEDOR_DB_PASSWORD: ${COMEDOR_DB_PASSWORD}
+      PORTERIA_DB_PASSWORD: ${PORTERIA_DB_PASSWORD}
+    volumes:
+      - mysql_albergue_data:/var/lib/mysql
+      - ./docker_mysql/01-inicializar.sh:/docker-entrypoint-initdb.d/01-inicializar.sh:ro
+      - ./respaldos_docker:/respaldos:ro
+    networks:
+      - albergue_red
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p\"$$MYSQL_ROOT_PASSWORD\" --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+
+  recepcion:
+    image: albergue-recepcion:dev
+    container_name: albergue_recepcion
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      DB_HOST: mysql
+      DB_NAME: bd_recepcion
+      DB_USER: recepcion_user
+      DB_PASSWORD: ${RECEPCION_DB_PASSWORD}
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - albergue_red
+
+  comedor:
+    image: albergue-comedor:dev
+    container_name: albergue_comedor
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      DB_HOST: mysql
+      DB_NAME: bd_comedor
+      DB_USER: comedor_user
+      DB_PASSWORD: ${COMEDOR_DB_PASSWORD}
+      RECEPCION_URL: http://recepcion:8000/api/api_albergados.php
+    depends_on:
+      mysql:
+        condition: service_healthy
+      recepcion:
+        condition: service_started
+    networks:
+      - albergue_red
+
+  porteria:
+    image: albergue-porteria:dev
+    container_name: albergue_porteria
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      DB_URL: jdbc:mysql://mysql:3306/bd_porteria?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      DB_USER: porteria_user
+      DB_PASSWORD: ${PORTERIA_DB_PASSWORD}
+      RECEPCION_URL: http://recepcion:8000/api/api_albergados.php?accion=listar_sincronizacion
+    depends_on:
+      mysql:
+        condition: service_healthy
+      recepcion:
+        condition: service_started
+    networks:
+      - albergue_red
+
+  angular:
+    image: albergue-angular:dev
+    container_name: albergue_angular
+    restart: unless-stopped
+    ports:
+      - "4200:80"
+    depends_on:
+      - recepcion
+      - comedor
+      - porteria
+    networks:
+      - albergue_red
+
+volumes:
+  mysql_albergue_data:
+
+networks:
+  albergue_red:
+    driver: bridge

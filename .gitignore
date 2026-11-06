@@ -1,3 +1,8 @@
+# ==========================================
+# SISTEMA ALBERGUE YURÚA
+# ARCHIVOS IGNORADOS POR GIT
+# ==========================================
+
 # Node.js y Angular
 node_modules/
 dist/
@@ -8,16 +13,40 @@ coverage/
 target/
 .mvn/wrapper/maven-wrapper.jar
 
-# Variables de entorno y credenciales
+# ==========================================
+# VARIABLES DE ENTORNO Y CREDENCIALES
+# ==========================================
+
 .env
 .env.*
 !.env.example
 
-# Archivos temporales
+# ==========================================
+# RESPALDOS DE BASES DE DATOS
+# ==========================================
+
+respaldos_docker/
+
+# Archivos SQL de respaldo
+*.sql
+
+# ==========================================
+# ARCHIVOS TEMPORALES
+# ==========================================
+
 *.log
 .DS_Store
 Thumbs.db
 
-# Editores
+# ==========================================
+# EDITORES
+# ==========================================
+
 .vscode/
 .idea/
+
+# ==========================================
+# ARCHIVOS TEMPORALES DE DOCKER
+# ==========================================
+
+*.pid

@@ -1,10 +1,11 @@
 const mysql = require('mysql2/promise');
 
 const pool = mysql.createPool({
-    host: 'localhost',
-    user: 'root',
-    password: '123456',
-    database: 'bd_comedor', // Ajusta esto al nombre real de la base de datos del comedor
+    host: process.env.DB_HOST || 'localhost',
+    user: process.env.DB_USER || 'root',
+    password: process.env.DB_PASSWORD ?? '',
+    database: process.env.DB_NAME || 'bd_comedor',
+
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0
